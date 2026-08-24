@@ -241,6 +241,19 @@ test('sync previews without writing, applies additions, prunes only on request',
   assert.deepEqual(goModels?.map((entry) => entry.id), ['stale-go', 'go-only'])
 })
 
+test('status flags a route that is not declared instead of showing empty counts', async () => {
+  const fx = fixture({
+    freeListings: LIVE_FREE,
+    goListings: LIVE_GO,
+    providers: CONFIGURED_FREE, // no opencode-go key at all
+  })
+  const value = await fx.tools.oc_model_status.execute({}, fx.exec)
+  assert.equal(value.routes.go.routeExists, false)
+  assert.deepEqual(value.routes.go.configured, [])
+  const text = fx.tools.oc_model_status.output.render({}, value).map((block) => block.text).join('')
+  assert.match(text, /route "opencode-go"[\s\S]*route not declared/)
+})
+
 test('tools surface a teaching error when services are absent', async () => {
   const tools = Object.fromEntries(
     createTools({ settings: () => undefined, llm: () => undefined }).map((tool) => [tool.name, tool]),
