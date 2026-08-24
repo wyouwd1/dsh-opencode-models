@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文](README.zh.md)
 
-在 DeepSeek Harness 中管理 [OpenCode Zen](https://opencode.ai/docs/zh-cn/zen/) 免费档与 Go 档模型：按需实时拉取 opencode.ai 的最新模型列表，与路由实际服务的条目对比，并通过四个 agent 工具和一个「OpenCode 模型」设置页增删条目。
+在 DeepSeek Harness 中管理 [OpenCode Zen](https://opencode.ai/docs/zh-cn/zen/) 免费档与 Go 档模型：按需实时拉取 opencode.ai 的最新模型列表，与路由实际服务的条目对比，并通过四个 agent 工具和一个「OpenCode 模型」设置页增删条目。免费档只认 "-free" 后缀的免费模型——免费端点也会发布与 Go 档共用的付费 id，一律不计入差异、不上架。
 
 ```sh
 dsh plugin --profile web add github:wyouwd1/dsh-opencode-models

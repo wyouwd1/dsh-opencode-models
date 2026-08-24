@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文](README.zh.md)
 
-Manage [OpenCode Zen](https://opencode.ai/docs/zen/) free-tier and Go-tier models in DeepSeek Harness: fetch the live model listings from opencode.ai on demand, compare them with what your routes actually serve, and add or remove entries — through four agent tools and an "OpenCode Models" settings page.
+Manage [OpenCode Zen](https://opencode.ai/docs/zen/) free-tier and Go-tier models in DeepSeek Harness: fetch the live model listings from opencode.ai on demand, compare them with what your routes actually serve, and add or remove entries — through four agent tools and an "OpenCode Models" settings page. The free tier is filtered to the "-free" model family: the free endpoint also advertises paid ids shared with the Go tier, and those never count, drift or get offered for adoption.
 
 ```sh
 dsh plugin --profile web add github:wyouwd1/dsh-opencode-models
