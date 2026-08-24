@@ -64,19 +64,23 @@ const CONFIGURED_FREE = {
   opencode: {
     displayName: 'OpenCode Free',
     models: [
-      { id: 'kept-free', name: 'Kept', contextWindow: 1000, maxTokens: 100, input: ['text'] },
-      { id: 'delisted-free', name: 'Delisted', contextWindow: 1000, maxTokens: 100, input: ['text'] },
+      { id: 'big-pickle', name: 'Big Pickle', contextWindow: 1000, maxTokens: 100, input: ['text'] },
+      { id: 'hy3-free', name: 'Hy3 Free', contextWindow: 1000, maxTokens: 100, input: ['text'] },
     ],
   },
 }
 
+// Official docs free ids (big-pickle, ox-alpha-free) plus listing-only
+// paid / suffix-only ids that must never count on the free route.
 const LIVE_FREE = [
-  { id: 'kept-free' },
-  { id: 'fresh-free' },
-  { id: 'deepseek-v4-pro' }, // paid id advertised on the free listing — never adoptable
+  { id: 'big-pickle' },
+  { id: 'ox-alpha-free' },
+  { id: 'deepseek-v4-pro' },
+  { id: 'deepseek-v4-flash-free' },
 ]
 const LIVE_GO = [
   { id: 'go-only' },
+  { id: 'deepseek-v4-pro' },
 ]
 
 test('status reports per-tier drift and isolates a failing tier', async () => {
@@ -99,13 +103,15 @@ test('status reports per-tier drift and isolates a failing tier', async () => {
 
   const value = await fx.tools.oc_model_status.execute({}, fx.exec)
   assert.equal(value.routes.free.stale.length, 1)
-  assert.deepEqual(value.routes.free.added, ['fresh-free'])
+  assert.deepEqual(value.routes.free.added, ['ox-alpha-free'])
+  assert.ok(!value.routes.free.added.includes('deepseek-v4-pro'), 'paid id never drifts')
+  assert.ok(!value.routes.free.added.includes('deepseek-v4-flash-free'), 'suffix-only id never drifts')
   assert.match(value.routes.go.error, /could not reach/)
 
   const blocks = fx.tools.oc_model_status.output.render({}, value)
   const text = blocks.map((block) => block.text).join('')
   assert.match(text, /configured 2 · live 2/)
-  assert.match(text, /delisted, still configured \(1\): delisted-free/)
+  assert.match(text, /delisted, still configured \(1\): hy3-free/)
 })
 
 test('add adopts ids only with assumeDefaults when the listing hides capacities', async () => {
@@ -115,18 +121,18 @@ test('add adopts ids only with assumeDefaults when the listing hides capacities'
     providers: CONFIGURED_FREE,
   })
   const refused = await fx.tools.oc_model_add.execute(
-    { tier: 'free', ids: ['fresh-free'] },
+    { tier: 'free', ids: ['ox-alpha-free'] },
     fx.exec,
   )
   assert.deepEqual(refused.addedIds, [])
   assert.match(refused.rejected[0].reason, /assumeDefaults/)
 
   const accepted = await fx.tools.oc_model_add.execute(
-    { tier: 'free', ids: ['fresh-free'], assumeDefaults: true },
+    { tier: 'free', ids: ['ox-alpha-free'], assumeDefaults: true },
     fx.exec,
   )
-  assert.deepEqual(accepted.addedIds, ['fresh-free'])
-  assert.deepEqual(accepted.assumedCapacityIds, ['fresh-free'])
+  assert.deepEqual(accepted.addedIds, ['ox-alpha-free'])
+  assert.deepEqual(accepted.assumedCapacityIds, ['ox-alpha-free'])
 })
 
 test('add writes the merged models array through the guarded patch', async () => {
@@ -135,11 +141,11 @@ test('add writes the merged models array through the guarded patch', async () =>
     goListings: LIVE_GO,
     providers: CONFIGURED_FREE,
   })
-  await fx.tools.oc_model_add.execute({ tier: 'free', ids: ['fresh-free'], assumeDefaults: true }, fx.exec)
+  await fx.tools.oc_model_add.execute({ tier: 'free', ids: ['ox-alpha-free'], assumeDefaults: true }, fx.exec)
   const last = fx.settings.state.updates.at(-1)
   assert.equal(last.expectedRevision, 7)
   const merged = last.patch.providers.opencode.models
-  assert.deepEqual(merged.map((entry) => entry.id), ['kept-free', 'delisted-free', 'fresh-free'])
+  assert.deepEqual(merged.map((entry) => entry.id), ['big-pickle', 'hy3-free', 'ox-alpha-free'])
   assert.equal(merged.at(-1).contextWindow, 128000)
 })
 
@@ -154,7 +160,24 @@ test('free tier never adopts a paid id that rides its listing', async () => {
     fx.exec,
   )
   assert.deepEqual(value.addedIds, [])
-  assert.match(value.rejected[0].reason, /do not cross tiers|not in the current live listing/)
+  assert.match(value.rejected[0].reason, /do not cross tiers/)
+  assert.equal(fx.settings.state.updates.length, 0)
+})
+
+test('free tier refuses suffix-only ids absent from the official free table', async () => {
+  const fx = fixture({
+    freeListings: LIVE_FREE,
+    goListings: LIVE_GO,
+    providers: CONFIGURED_FREE,
+  })
+  const value = await fx.tools.oc_model_add.execute(
+    { tier: 'free', ids: ['deepseek-v4-flash-free', 'x-preview-f-free'], assumeDefaults: true },
+    fx.exec,
+  )
+  assert.deepEqual(value.addedIds, [])
+  for (const id of ['deepseek-v4-flash-free', 'x-preview-f-free']) {
+    assert.match(value.rejected.find((entry) => entry.id === id).reason, /not in the current live listing/)
+  }
   assert.equal(fx.settings.state.updates.length, 0)
 })
 
@@ -165,11 +188,11 @@ test('add refuses cross-tier ids and unknown ids with teaching reasons', async (
     providers: CONFIGURED_FREE,
   })
   const value = await fx.tools.oc_model_add.execute(
-    { tier: 'go', ids: ['fresh-free', 'nope'] },
+    { tier: 'go', ids: ['ox-alpha-free', 'nope'] },
     fx.exec,
   )
   const reasons = Object.fromEntries(value.rejected.map((entry) => [entry.id, entry.reason]))
-  assert.match(reasons['fresh-free'], /do not cross tiers/)
+  assert.match(reasons['ox-alpha-free'], /do not cross tiers/)
   assert.match(reasons.nope, /not in the current live listing/)
   assert.deepEqual(value.addedIds, [])
 })
@@ -177,18 +200,18 @@ test('add refuses cross-tier ids and unknown ids with teaching reasons', async (
 test('add keeps an existing entry untouched and reports the skip', async () => {
   const fx = fixture({
     freeListings: [
-      { id: 'kept-free', name: 'Renamed Online', contextWindow: 42, maxTokens: 7 },
+      { id: 'big-pickle', name: 'Renamed Online', contextWindow: 42, maxTokens: 7 },
     ],
     goListings: [],
     providers: { opencode: { displayName: 'x', models: [
-      { id: 'kept-free', name: 'My Corrected Name', contextWindow: 1000, maxTokens: 100, input: ['text'] },
+      { id: 'big-pickle', name: 'My Corrected Name', contextWindow: 1000, maxTokens: 100, input: ['text'] },
     ] } },
   })
   const value = await fx.tools.oc_model_add.execute(
-    { tier: 'free', ids: ['kept-free'] },
+    { tier: 'free', ids: ['big-pickle'] },
     fx.exec,
   )
-  assert.deepEqual(value.skippedIds, ['kept-free'])
+  assert.deepEqual(value.skippedIds, ['big-pickle'])
   assert.deepEqual(value.addedIds, [])
   assert.equal(fx.settings.state.updates.length, 0)
 })
@@ -205,13 +228,13 @@ test('remove drops only configured ids and skips the write when nothing matched'
   assert.equal(fx.settings.state.updates.length, 0)
 
   const hit = await fx.tools.oc_model_remove.execute(
-    { tier: 'free', ids: ['delisted-free', 'ghost'] },
+    { tier: 'free', ids: ['hy3-free', 'ghost'] },
     fx.exec,
   )
-  assert.deepEqual(hit.removedIds, ['delisted-free'])
+  assert.deepEqual(hit.removedIds, ['hy3-free'])
   assert.deepEqual(hit.notFoundIds, ['ghost'])
   const merged = fx.settings.state.updates.at(-1).patch.providers.opencode.models
-  assert.deepEqual(merged.map((entry) => entry.id), ['kept-free'])
+  assert.deepEqual(merged.map((entry) => entry.id), ['big-pickle'])
 })
 
 test('sync previews without writing, applies additions, prunes only on request', async () => {
@@ -229,7 +252,7 @@ test('sync previews without writing, applies additions, prunes only on request',
   const preview = build()
   const previewValue = await preview.tools.oc_model_sync.execute({}, preview.exec)
   assert.equal(previewValue.applied, false)
-  assert.deepEqual(previewValue.routes.free.planAdd, ['fresh-free'])
+  assert.deepEqual(previewValue.routes.free.planAdd, ['ox-alpha-free'])
   assert.deepEqual(previewValue.routes.go.planRemove, ['stale-go'])
   assert.equal(preview.settings.state.updates.length, 0)
 
@@ -239,7 +262,7 @@ test('sync previews without writing, applies additions, prunes only on request',
     applied.exec,
   )
   assert.equal(appliedValue.applied, true)
-  assert.deepEqual(appliedValue.routes.free.appliedAdd, ['fresh-free'])
+  assert.deepEqual(appliedValue.routes.free.appliedAdd, ['ox-alpha-free'])
   assert.deepEqual(appliedValue.routes.go.appliedRemove, ['stale-go'])
   assert.equal(applied.settings.state.updates.length, 2)
   // Prune removes the delisted id while the newly adopted online id stays.

@@ -90,18 +90,19 @@ test('normalizeModelEntry rejects invalid fields', () => {
   }
 })
 
-test('filterFreeTierLive keeps only the -free family plus configured ids', () => {
+test('filterFreeTierLive keeps only the official free family plus configured ids', () => {
   const live = [
-    { id: 'deepseek-v4-pro' },
-    { id: 'deepseek-v4-flash-free' },
-    { id: 'x-preview-f-free' },
+    { id: 'deepseek-v4-pro' },            // paid id riding the free listing
+    { id: 'deepseek-v4-flash-free' },     // -free suffix but NOT in the official free table
+    { id: 'x-preview-f-free' },           // -free suffix but NOT in the official free table
+    { id: 'muse-spark-1.2-contributor-free' },
     { id: 'big-pickle' },
     { id: 'claude-opus-5' },
   ]
-  assert.deepEqual(filterFreeTierLive(live, ['big-pickle']).map((entry) => entry.id),
-    ['deepseek-v4-flash-free', 'x-preview-f-free', 'big-pickle'])
-  assert.deepEqual(filterFreeTierLive(live, []).map((entry) => entry.id),
-    ['deepseek-v4-flash-free', 'x-preview-f-free'])
+  const kept = filterFreeTierLive(live, ['big-pickle']).map((entry) => entry.id)
+  assert.deepEqual(kept, ['muse-spark-1.2-contributor-free', 'big-pickle'])
+  const rehomed = filterFreeTierLive(live, ['x-preview-f-free']).map((entry) => entry.id)
+  assert.ok(rehomed.includes('x-preview-f-free'), 'a configured id stays managed')
 })
 test('diffModels splits added and stale in order', () => {
   const configured = [{ id: 'kept' }, { id: 'delisted' }]

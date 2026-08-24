@@ -88,7 +88,7 @@ function stubApi({ describeFails = false } = {}) {
       async discoverModels(request) {
         calls.discover.push(request)
         const models = request.baseURL === 'https://opencode.ai/zen/v1'
-          ? [{ id: 'x-preview-f-free' }, { id: 'fresh-free' }, { id: 'claude-opus-5' }]
+          ? [{ id: 'big-pickle' }, { id: 'x-preview-f-free' }, { id: 'ox-alpha-free' }, { id: 'deepseek-v4-pro' }]
           : [{ id: 'go-a' }]
         return { result: { ok: true, value: { models } } }
       },
@@ -142,8 +142,9 @@ test('section mounts, loads the two opencode cards, and batch-deletes across rou
   assert.ok(text.includes('OpenCode Free') && text.includes('OpenCode Go'), 'opencode tier headers render')
   assert.ok(text.includes('Big Pickle') && text.includes('X Preview Free'), 'free configured rows render')
   assert.ok(text.includes('Go A'), 'go configured rows render')
-  assert.ok(text.includes('fresh-free'), 'available pick renders')
-  assert.ok(!text.includes('claude-opus-5'), 'a paid id riding the free listing never renders')
+  assert.ok(text.includes('ox-alpha-free'), 'official free pick renders')
+  assert.ok(!text.includes('deepseek-v4-pro'), 'a paid id riding the free listing never renders')
+  assert.ok(!text.includes('deepseek-v4-flash-free'), 'a suffix-only id never renders')
   assert.equal(checkboxes(renderer).length, 3, 'one checkbox per configured row (no other providers)')
 
   // Row order: free[big-pickle, x-preview-f-free], go[go-a].
@@ -178,9 +179,18 @@ test('section mounts, loads the two opencode cards, and batch-deletes across rou
   const after = JSON.stringify(renderer.toJSON())
   const rows = renderer.root.findAll((node) => node.props.className === 'ocm-row')
   assert.equal(rows.length, 1, 'configured rows shrink to the survivors')
-  assert.ok(!after.includes('Go A'), 'removed go model disappears')
-  assert.ok(!after.includes('X Preview Free'), 'removed free model no longer configured')
-  assert.ok(after.includes('fresh-free'), 'the surviving live free model is available to re-adopt')
+  const rowText = (node, out = []) => {
+    if (node === null || node === undefined) return out
+    if (typeof node === 'string') { out.push(node); return out }
+    if (Array.isArray(node)) { for (const child of node) rowText(child, out); return out }
+    if (node.props && node.props.children !== undefined) rowText(node.props.children, out)
+    return out
+  }
+  const texts = rows.map((r) => rowText(r).join(' '))
+  assert.ok(!texts.some((t) => t.includes('go-a')), 'removed go row disappears')
+  assert.ok(!texts.some((t) => t.includes('x-preview-f-free')), 'removed free row disappears')
+  assert.ok(after.includes('ox-alpha-free'), 'the surviving official free model is available to re-adopt')
+  assert.ok(!after.includes('deepseek-v4-pro'), 'paid id stays invisible after reload')
   assert.ok(after.includes('t:deleted'), 'summary notice renders')
 })
 

@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文](README.zh.md)
 
-在 DeepSeek Harness 中管理 [OpenCode Zen](https://opencode.ai/docs/zh-cn/zen/) 免费档与 Go 档模型：按需实时拉取 opencode.ai 的最新模型列表，与路由实际服务的条目对比，并通过四个 agent 工具和一个「OpenCode 模型」设置页增删条目。免费档只认 "-free" 后缀的免费模型——免费端点也会发布与 Go 档共用的付费 id，一律不计入差异、不上架。
+在 DeepSeek Harness 中管理 [OpenCode Zen](https://opencode.ai/docs/zh-cn/zen/) 免费档与 Go 档模型：按需实时拉取 opencode.ai 的最新模型列表，与路由实际服务的条目对比，并通过四个 agent 工具和一个「OpenCode 模型」设置页增删条目。免费档以 [官方文档](https://opencode.ai/docs/zh-cn/zen/) 定价表为准（big-pickle、ox-alpha-free、mimo-v2.5-free、hy3-free、nemotron-3-ultra-free、nemotron-3.5-lightning-free、muse-spark-1.2-contributor-free）：免费端点同时发布的付费 id 一律不计入差异、不上架，仅带后缀而官方表里没有的 id（x-preview-f-free、deepseek-v4-flash-free 等）也不可上架。
 
 ```sh
 dsh plugin --profile web add github:wyouwd1/dsh-opencode-models
