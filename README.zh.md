@@ -89,3 +89,7 @@ curl -f http://127.0.0.1:3101/plugins/dsh-opencode-models/client.js             
 ## 许可
 
 [MIT](LICENSE)
+
+## Muse 接入方案
+
+OpenCode Go 的 `muse-spark-1.2-contributor`（地区受限模型）接入指南（独立路由 + 代理 + 思考档位），见 [`MUSE.md`](./MUSE.md)。
