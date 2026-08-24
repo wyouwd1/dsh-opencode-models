@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: the settings section crashed on mount (blank content under a live nav entry) because the wire envelope was unwrapped synchronously from a Promise; the unwrap now awaits the call, covered by a headless mount test.
+
 ## 0.1.0
 
 - Four agent tools (`oc_model_status`, `oc_model_add`, `oc_model_remove`, `oc_model_sync`) that fetch the OpenCode Zen free/Go listings live and manage the two `llm-pi-ai` routes in `~/.dsh/settings.yaml` with a settings-revision guard.
