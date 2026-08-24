@@ -5,7 +5,7 @@
 Manage [OpenCode Zen](https://opencode.ai/docs/zen/) free-tier and Go-tier models in DeepSeek Harness: fetch the live model listings from opencode.ai on demand, compare them with what your routes actually serve, and add or remove entries — through four agent tools and an "OpenCode Models" settings page.
 
 ```sh
-dsh plugin --profile web add github:<owner>/dsh-opencode-models
+dsh plugin --profile web add github:wyouwd1/dsh-opencode-models
 ```
 
 ## What it does
@@ -48,7 +48,7 @@ dsh --profile web
 From GitHub (sources install without any build step — the shipped `lib/` artifacts are plain ESM):
 
 ```sh
-dsh plugin --profile web add github:<owner>/dsh-opencode-models
+dsh plugin --profile web add github:wyouwd1/dsh-opencode-models
 ```
 
 Requirements: DeepSeek Harness ≥ 0.1.1-rc.1 (the `llm-pi-ai` adapter family, settings seam, and web app), Node ≥ 22.

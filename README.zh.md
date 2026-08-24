@@ -5,7 +5,7 @@
 在 DeepSeek Harness 中管理 [OpenCode Zen](https://opencode.ai/docs/zh-cn/zen/) 免费档与 Go 档模型：按需实时拉取 opencode.ai 的最新模型列表，与路由实际服务的条目对比，并通过四个 agent 工具和一个「OpenCode 模型」设置页增删条目。
 
 ```sh
-dsh plugin --profile web add github:<owner>/dsh-opencode-models
+dsh plugin --profile web add github:wyouwd1/dsh-opencode-models
 ```
 
 ## 功能
@@ -48,7 +48,7 @@ dsh --profile web
 从 GitHub 安装（仓库直接附带构建产物 `lib/`，纯 ESM，源码安装无需任何构建授权）：
 
 ```sh
-dsh plugin --profile web add github:<owner>/dsh-opencode-models
+dsh plugin --profile web add github:wyouwd1/dsh-opencode-models
 ```
 
 要求：DeepSeek Harness ≥ 0.1.1-rc.1（需要 `llm-pi-ai` 适配器族、settings seam 与 Web 应用），Node ≥ 22。
