@@ -88,7 +88,7 @@ function stubApi({ describeFails = false } = {}) {
       async discoverModels(request) {
         calls.discover.push(request)
         const models = request.baseURL === 'https://opencode.ai/zen/v1'
-          ? [{ id: 'x-preview-f-free' }, { id: 'fresh-free' }]
+          ? [{ id: 'x-preview-f-free' }, { id: 'fresh-free' }, { id: 'claude-opus-5' }]
           : [{ id: 'go-a' }]
         return { result: { ok: true, value: { models } } }
       },
@@ -143,6 +143,7 @@ test('section mounts, loads the two opencode cards, and batch-deletes across rou
   assert.ok(text.includes('Big Pickle') && text.includes('X Preview Free'), 'free configured rows render')
   assert.ok(text.includes('Go A'), 'go configured rows render')
   assert.ok(text.includes('fresh-free'), 'available pick renders')
+  assert.ok(!text.includes('claude-opus-5'), 'a paid id riding the free listing never renders')
   assert.equal(checkboxes(renderer).length, 3, 'one checkbox per configured row (no other providers)')
 
   // Row order: free[big-pickle, x-preview-f-free], go[go-a].

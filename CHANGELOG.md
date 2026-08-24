@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The free-tier live view is filtered to the "-free" model family (plus ids already configured, e.g. legacy "big-pickle"): the paid ids the free endpoint also advertises (claude/gpt/gemini etc., shared with the Go tier) no longer count, drift or appear under "available" in the panel, nor are they adoptable through oc_model_add / oc_model_sync.
 - The OpenCode Models section is pinned to the top of the settings sidebar (order -100): the Free tier card first, the Go tier card second, every other settings section below.
 - Every configured row gains a checkbox; the bulk bar deletes any mix of selected models across the two OpenCode cards in one confirmation, with one revision-guarded write per affected route. The panel manages the two OpenCode routes only.
 - Fix: the settings section crashed on mount (blank content under a live nav entry) because the wire envelope was unwrapped synchronously from a Promise; the unwrap now awaits the call, covered by a headless mount test.

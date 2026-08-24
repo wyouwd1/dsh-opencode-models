@@ -7,6 +7,7 @@ import {
   buildRoutePatch,
   diffModels,
   displayNameFromId,
+  filterFreeTierLive,
   mergeEntries,
   normalizeModelEntry,
   removeEntries,
@@ -89,6 +90,19 @@ test('normalizeModelEntry rejects invalid fields', () => {
   }
 })
 
+test('filterFreeTierLive keeps only the -free family plus configured ids', () => {
+  const live = [
+    { id: 'deepseek-v4-pro' },
+    { id: 'deepseek-v4-flash-free' },
+    { id: 'x-preview-f-free' },
+    { id: 'big-pickle' },
+    { id: 'claude-opus-5' },
+  ]
+  assert.deepEqual(filterFreeTierLive(live, ['big-pickle']).map((entry) => entry.id),
+    ['deepseek-v4-flash-free', 'x-preview-f-free', 'big-pickle'])
+  assert.deepEqual(filterFreeTierLive(live, []).map((entry) => entry.id),
+    ['deepseek-v4-flash-free', 'x-preview-f-free'])
+})
 test('diffModels splits added and stale in order', () => {
   const configured = [{ id: 'kept' }, { id: 'delisted' }]
   const live = [{ id: 'delisted-x' }, { id: 'kept' }, { id: 'fresh' }]

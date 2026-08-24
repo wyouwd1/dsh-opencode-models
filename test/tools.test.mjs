@@ -73,6 +73,7 @@ const CONFIGURED_FREE = {
 const LIVE_FREE = [
   { id: 'kept-free' },
   { id: 'fresh-free' },
+  { id: 'deepseek-v4-pro' }, // paid id advertised on the free listing — never adoptable
 ]
 const LIVE_GO = [
   { id: 'go-only' },
@@ -140,6 +141,21 @@ test('add writes the merged models array through the guarded patch', async () =>
   const merged = last.patch.providers.opencode.models
   assert.deepEqual(merged.map((entry) => entry.id), ['kept-free', 'delisted-free', 'fresh-free'])
   assert.equal(merged.at(-1).contextWindow, 128000)
+})
+
+test('free tier never adopts a paid id that rides its listing', async () => {
+  const fx = fixture({
+    freeListings: LIVE_FREE,
+    goListings: LIVE_GO,
+    providers: CONFIGURED_FREE,
+  })
+  const value = await fx.tools.oc_model_add.execute(
+    { tier: 'free', ids: ['deepseek-v4-pro'], assumeDefaults: true },
+    fx.exec,
+  )
+  assert.deepEqual(value.addedIds, [])
+  assert.match(value.rejected[0].reason, /do not cross tiers|not in the current live listing/)
+  assert.equal(fx.settings.state.updates.length, 0)
 })
 
 test('add refuses cross-tier ids and unknown ids with teaching reasons', async () => {
