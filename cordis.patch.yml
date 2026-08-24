@@ -2,5 +2,5 @@
 # oc_model_* management tools. The browser half loads through this package's
 # dsh.client manifest (an OpenCode Models settings section), not this patch.
 - insert:
-    - id: opencode-model-manager
+    - id: dsh-opencode-models
       name: 'dsh-opencode-models'
