@@ -97,3 +97,10 @@ test('writeRouteModels refuses to invent a whole route', async () => {
     /declare the route itself/,
   )
 })
+
+test('writeRouteModels refuses a read-only provider before touching storage', async () => {
+  const settings = fakeSettings({ section: SECTION() })
+  settings.writable = false
+  await assert.rejects(() => writeRouteModels(settings, 'opencode', []), /read-only/)
+  assert.equal(settings.state.updates.length, 0)
+})
