@@ -32,7 +32,7 @@ Model-list edits take effect on the next request — no restart. This plugin nev
 
 ### "OpenCode Models" settings section
 
-A section in the web settings panel (after the built-in Models page) shows both tiers side by side: configured entries with a "delisted" flag on stale ones, checkboxes over online-not-configured ids, per-row remove, and a two-click sync (preview → confirm). It reads and writes exclusively through the existing configuration-page contracts — `settings.describe` / `settings.update` with `expectedRevision`, and `llm.discoverModels` for the live listings — and refreshes only while open when pushed invalidations arrive.
+A section pinned to the TOP of the web settings sidebar shows both tiers side by side: configured entries with a "delisted" flag on stale ones, checkboxes over online-not-configured ids, per-row remove, and a two-click sync (preview → confirm). It reads and writes exclusively through the existing configuration-page contracts — `settings.describe` / `settings.update` with `expectedRevision`, and `llm.discoverModels` for the live listings — and refreshes only while open when pushed invalidations arrive.
 
 Writes are guarded by the settings revision: if the Models page or another session writes first, this plugin re-reads once instead of overwriting it, and schema-invalid candidates are refused before anything persists.
 

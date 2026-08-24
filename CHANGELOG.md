@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The OpenCode Models section is pinned to the top of the settings sidebar (order -100): the Free tier card first, the Go tier card second, every other settings section below.
 - Fix: the settings section crashed on mount (blank content under a live nav entry) because the wire envelope was unwrapped synchronously from a Promise; the unwrap now awaits the call, covered by a headless mount test.
 
 ## 0.1.0

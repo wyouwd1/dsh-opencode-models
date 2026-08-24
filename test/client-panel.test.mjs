@@ -95,6 +95,7 @@ test('section mounts, loads both tiers, and renders configured plus available ro
   assert.deepEqual(inject, ['slots', 'locale', 'connection', 'remote'])
   apply(fakeCtx(api, captured))
   assert.equal(captured.options.id, 'opencode-models')
+  assert.equal(captured.options.order, -100, 'pinned to the top of the settings sidebar')
 
   const face = captured.options.inject()
   let renderer
