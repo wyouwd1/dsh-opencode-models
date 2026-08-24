@@ -3,8 +3,8 @@
 // react-test-renderer (passive effects run), and drives the load path against
 // stubbed wire APIs. Guards the async wire unwrap (a synchronous unwrap of a
 // Promise crashed the whole section on mount), the pinned sidebar order, the
-// third "other" card (official llm-deepseek models), and the cross-card batch
-// removal flow with one guarded write per affected namespace.
+// two opencode-only cards, and the cross-card batch removal flow with one
+// guarded write per affected route.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import path from 'node:path'
@@ -56,12 +56,8 @@ function stubApi({ describeFails = false } = {}) {
         ] },
       },
     },
-    'llm-deepseek': { models: [
-      { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', contextWindow: 128000, maxTokens: 32000, input: ['text'] },
-      { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', contextWindow: 128000, maxTokens: 32000, input: ['text'] },
-    ] },
   }
-  const revisions = { 'llm-pi-ai': 3, 'llm-deepseek': 1 }
+  const revisions = { 'llm-pi-ai': 3 }
   const calls = { describe: 0, discover: [], update: [] }
   const api = {
     settings: {
@@ -84,7 +80,6 @@ function stubApi({ describeFails = false } = {}) {
         if (patch.providers) {
           for (const route of Object.keys(patch.providers)) store[ns].providers[route].models = patch.providers[route].models
         }
-        if (patch.models) store[ns].models = patch.models
         revisions[ns] += 1
         return { result: { ok: true, value: store[ns] } }
       },
@@ -134,7 +129,7 @@ function button(renderer, text) {
     node.type === 'button' && node.props.children === text)[0]
 }
 
-test('section mounts, loads three cards, and batch-deletes across namespaces', async () => {
+test('section mounts, loads the two opencode cards, and batch-deletes across routes', async () => {
   const { api, calls, store } = stubApi()
   const { renderer, captured } = mount(api)
   assert.equal(captured.options.id, 'opencode-models')
@@ -145,15 +140,15 @@ test('section mounts, loads three cards, and batch-deletes across namespaces', a
   assert.equal(calls.discover.length, 2)
   const text = JSON.stringify(renderer.toJSON())
   assert.ok(text.includes('OpenCode Free') && text.includes('OpenCode Go'), 'opencode tier headers render')
-  assert.ok(text.includes('t:others'), 'other card header renders')
-  assert.ok(text.includes('deepseek-v4-flash') && text.includes('deepseek-v4-pro'), 'official models render in the other card')
+  assert.ok(text.includes('Big Pickle') && text.includes('X Preview Free'), 'free configured rows render')
+  assert.ok(text.includes('Go A'), 'go configured rows render')
   assert.ok(text.includes('fresh-free'), 'available pick renders')
-  assert.equal(checkboxes(renderer).length, 5, 'one checkbox per configured row across all cards')
+  assert.equal(checkboxes(renderer).length, 3, 'one checkbox per configured row (no other providers)')
 
-  // Row order: free[big-pickle, x-preview-f-free], go[go-a], other[deepseek-v4-flash, deepseek-v4-pro].
+  // Row order: free[big-pickle, x-preview-f-free], go[go-a].
   const boxes = checkboxes(renderer)
-  TestRenderer.act(() => { boxes[1].props.onChange() })
-  TestRenderer.act(() => { boxes[4].props.onChange() })
+  TestRenderer.act(() => { boxes[1].props.onChange() }) // x-preview-f-free
+  TestRenderer.act(() => { boxes[2].props.onChange() }) // go-a
   assert.ok(button(renderer, 't:deleteSelected'), 'bulk bar appears once anything is selected')
   assert.equal(calls.update.length, 0, 'arming the delete does not write')
 
@@ -164,44 +159,42 @@ test('section mounts, loads three cards, and batch-deletes across namespaces', a
   TestRenderer.act(() => { button(renderer, 't:confirmDelete (2)').props.onClick() })
   await flush(100)
 
-  assert.equal(calls.update.length, 2, 'one guarded write per affected namespace')
+  assert.equal(calls.update.length, 2, 'one guarded write per affected route')
   assert.deepEqual(calls.update[0], {
     ns: 'llm-pi-ai',
     patch: { providers: { opencode: { models: [{ id: 'big-pickle', name: 'Big Pickle', contextWindow: 1048576, maxTokens: 131072, input: ['text'] }] } } },
     expectedRevision: 3,
   })
   assert.deepEqual(calls.update[1], {
-    ns: 'llm-deepseek',
-    patch: { models: [{ id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', contextWindow: 128000, maxTokens: 32000, input: ['text'] }] },
-    expectedRevision: 1,
+    ns: 'llm-pi-ai',
+    patch: { providers: { 'opencode-go': { models: [] } } },
+    expectedRevision: 4,
   })
   assert.deepEqual(store['llm-pi-ai'].providers.opencode.models.map((m) => m.id), ['big-pickle'])
-  assert.deepEqual(store['llm-deepseek'].models.map((m) => m.id), ['deepseek-v4-flash'])
-  assert.deepEqual(store['llm-pi-ai'].providers['opencode-go'].models.map((m) => m.id), ['go-a'], 'untouched route stays')
+  assert.deepEqual(store['llm-pi-ai'].providers['opencode-go'].models.map((m) => m.id), [])
 
-  // The post-delete reload renders without the removed rows and shows the notice.
+  // The post-delete reload renders without the removed configured rows and shows the notice.
   const after = JSON.stringify(renderer.toJSON())
-  // The removed free model is still live, so it now shows under "available";
-  // what must disappear is its CONFIGURED row. The official model is gone entirely.
   const rows = renderer.root.findAll((node) => node.props.className === 'ocm-row')
-  assert.equal(rows.length, 3, 'configured rows shrink to the survivors')
-  assert.ok(!after.includes('deepseek-v4-pro'), 'removed official model disappears')
+  assert.equal(rows.length, 1, 'configured rows shrink to the survivors')
+  assert.ok(!after.includes('Go A'), 'removed go model disappears')
+  assert.ok(!after.includes('X Preview Free'), 'removed free model no longer configured')
   assert.ok(after.includes('fresh-free'), 'the surviving live free model is available to re-adopt')
   assert.ok(after.includes('t:deleted'), 'summary notice renders')
 })
 
-test('single-row removal on the other card writes only its namespace', async () => {
+test('single-row removal writes only that route', async () => {
   const { api, calls, store } = stubApi()
   const { renderer } = mount(api)
   await flush()
 
   const removes = renderer.root.findAll((node) => node.props.className === 'ocm-remove')
-  assert.equal(removes.length, 5)
-  TestRenderer.act(() => { removes[4].props.onClick() }) // deepseek-v4-pro row
+  assert.equal(removes.length, 3)
+  TestRenderer.act(() => { removes[0].props.onClick() }) // big-pickle row
   await flush(100)
   assert.equal(calls.update.length, 1)
-  assert.equal(calls.update[0].ns, 'llm-deepseek')
-  assert.deepEqual(store['llm-deepseek'].models.map((m) => m.id), ['deepseek-v4-flash'])
+  assert.equal(calls.update[0].ns, 'llm-pi-ai')
+  assert.deepEqual(store['llm-pi-ai'].providers.opencode.models.map((m) => m.id), ['x-preview-f-free'])
 })
 
 test('a failing describe degrades to the inline error instead of unmounting', async () => {
