@@ -32,7 +32,7 @@ Model-list edits take effect on the next request — no restart. This plugin nev
 
 ### "OpenCode Models" settings section
 
-A section pinned to the TOP of the web settings sidebar shows both tiers side by side: configured entries with a "delisted" flag on stale ones, checkboxes over online-not-configured ids, per-row remove, and a two-click sync (preview → confirm). It reads and writes exclusively through the existing configuration-page contracts — `settings.describe` / `settings.update` with `expectedRevision`, and `llm.discoverModels` for the live listings — and refreshes only while open when pushed invalidations arrive.
+A section pinned to the TOP of the web settings sidebar shows three cards in order — OpenCode Zen free tier, Go tier, then the official DeepSeek section (llm-deepseek) — with per-row checkboxes and a bulk **delete-selected** bar that trims any mix of models across the three lists in one confirmation, removing them from the conversation model list on the next request: configured entries with a "delisted" flag on stale ones, checkboxes over online-not-configured ids, per-row remove, and a two-click sync (preview → confirm). It reads and writes exclusively through the existing configuration-page contracts — `settings.describe` / `settings.update` with `expectedRevision`, and `llm.discoverModels` for the live listings — and refreshes only while open when pushed invalidations arrive.
 
 Writes are guarded by the settings revision: if the Models page or another session writes first, this plugin re-reads once instead of overwriting it, and schema-invalid candidates are refused before anything persists.
 

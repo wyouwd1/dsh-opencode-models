@@ -32,7 +32,7 @@ DeepSeek Harness 通过 `~/.dsh/settings.yaml` 里 `llm-pi-ai` 的两条 provide
 
 ### 「OpenCode 模型」设置分区
 
-Web 设置面板中的分区（固定在设置页侧栏最顶部）：两档并排展示——已配置条目（下架的带标记）、线上未配置 id 的勾选列表、行内移除、两击同步（先预览再确认）。读写完全走既有配置页协议——`settings.describe` / 带 `expectedRevision` 的 `settings.update`，实时列表走 `llm.discoverModels`——仅在页面打开时跟随推送失效刷新。
+Web 设置面板中的分区（固定在设置页侧栏最顶部）：三张卡按序展示——OpenCode Zen 免费档、Go 档、DeepSeek 官方段（llm-deepseek）；每行带勾选框，底部「删除选中」批量操作可跨三张卡任意组合一次确认删减，下一次请求即从对话模型列表移除——已配置条目（下架的带标记）、线上未配置 id 的勾选列表、行内移除、两击同步（先预览再确认）。读写完全走既有配置页协议——`settings.describe` / 带 `expectedRevision` 的 `settings.update`，实时列表走 `llm.discoverModels`——仅在页面打开时跟随推送失效刷新。
 
 写入受 settings revision 保护：Models 页或其他会话先落笔时，本插件重读一次而不是覆盖；schema 校验失败的候选在任何持久化之前即被拒绝。
 
