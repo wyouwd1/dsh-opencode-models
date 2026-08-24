@@ -75,6 +75,17 @@ npm test          # 覆盖 lib/shared.js、lib/writer.js、lib/tools.js 的 node
 
 宿主面（`lib/index.js`）零 `@deepseek-ai/*` 导入：工具以普通定义注册，全部服务在调用时经 cordis context 解析。浏览器面（`lib/client.js`)以模块加载器要求的 closure-factory 产物交付，仅 require 平台预置模块（`react`、`dsh-client-ui-primitives`）。
 
+## 验证
+
+在隔离的 DSH home 中复现安装冒烟（不影响真实 `~/.dsh`）：
+
+```sh
+DSH_HOME=/tmp/ocmm-home dsh plugin --profile web add /path/to/dsh-opencode-models
+DSH_HOME=/tmp/ocmm-home dsh --profile web --dump-config | grep opencode-model   # 出现 "# == dsh-opencode-models" 层
+DSH_HOME=/tmp/ocmm-home dsh --profile web --port 3101 --no-open                 # 打开 http://127.0.0.1:3101
+curl -f http://127.0.0.1:3101/plugins/dsh-opencode-models/client.js             # 浏览器半区产物可达
+```
+
 ## 许可
 
 [MIT](LICENSE)

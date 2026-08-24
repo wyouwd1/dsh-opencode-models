@@ -75,6 +75,17 @@ npm test          # node:test suites over lib/shared.js, lib/writer.js, lib/tool
 
 The host face (`lib/index.js`) imports no `@deepseek-ai/*` package: tools register as plain definitions and all services resolve through the cordis context at call time. The browser face (`lib/client.js`) ships as the closure-factory artifact the module loader expects and requires only platform-seeded modules (`react`, `dsh-client-ui-primitives`).
 
+## Verification
+
+Reproduce the install smoke test against an isolated DSH home (no effect on your real `~/.dsh`):
+
+```sh
+DSH_HOME=/tmp/ocmm-home dsh plugin --profile web add /path/to/dsh-opencode-models
+DSH_HOME=/tmp/ocmm-home dsh --profile web --dump-config | grep opencode-model   # shows the "# == dsh-opencode-models" layer
+DSH_HOME=/tmp/ocmm-home dsh --profile web --port 3101 --no-open                 # then open http://127.0.0.1:3101
+curl -f http://127.0.0.1:3101/plugins/dsh-opencode-models/client.js             # the served browser half
+```
+
 ## License
 
 [MIT](LICENSE)
